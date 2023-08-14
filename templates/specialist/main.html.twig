@@ -1,0 +1,7 @@
+{% for customer in customers %}
+    <div>
+        {{ customer.name }}
+        {{ customer.surname }}
+        {{ customer.reservationCode }} <!-- or any other property of the customer -->
+    </div>
+{% endfor %}
