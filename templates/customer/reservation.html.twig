@@ -1,0 +1,27 @@
+<body>
+    <div class="login-container">
+        <form action="/customer/reservation" method="POST">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="surname">Surname:</label>
+            <input type="text" id="surname" name="surname" required>
+
+            <select id="specialist" name="specialistId" required>
+                {% for specialist in specialists %}
+                    <option value="{{ specialist.pkId }}">{{ specialist.name }} {{ specialist.surname }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Make Reservation</button>
+        </form>
+    </div>
+</body>
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="flash-{{ label }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+

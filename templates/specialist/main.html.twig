@@ -1,7 +1,21 @@
-{% for customer in customers %}
+{% for item in customerReservations %}
     <div>
-        {{ customer.name }}
-        {{ customer.surname }}
-        {{ customer.reservationCode }} <!-- or any other property of the customer -->
+        {{ item.customer.name }}
+        {{ item.customer.surname }}
+        {{ item.customer.reservationCode }}
+
+        {% if item.reservation %}
+            <p>Reservation Time: {{ item.reservation.startTime|date('H:i') }}</p>
+
+            <form action="{{ path('update_reservation_status', {'id': item.reservation.pkId}) }}" method="post">
+                <select name="status">
+                    <option value="Cancel">Cancel</option>
+                    <option value="Begin">Begin</option>
+                    <option value="End">End</option>
+                    <option value="Priority">Priority</option>
+                </select>
+                <button type="submit">Update</button>
+            </form>
+        {% endif %}
     </div>
 {% endfor %}

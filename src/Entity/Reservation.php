@@ -55,6 +55,58 @@ class Reservation
      * @ORM\Column(name="status", type="string", length=15, nullable=false)
      */
     private $status;
+    public function getpkId(): int
+    {
+        return $this->pkId;
+    }
+    public function getEndTime(): \DateTime
+    {
+        return $this->endtime;
+    }
+    public function getStartTime(): \DateTime
+    {
+        return $this->starttime;
+    }
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+    public function getFkCustomer(): int
+    {
+        return $this->fkCustomer;
+    }
 
+
+    public function setfkSpecialist(int $fkSpecialist): self
+    {
+        $this->fkSpecialist = $fkSpecialist;
+
+        return $this;
+    }
+    public function setfkCustomer(int $fkCustomer): self
+    {
+        $this->fkCustomer = $fkCustomer;
+
+        return $this;
+    }
+
+    public function setStartTime(\DateTime $starttime): self
+    {
+        $this->starttime = $starttime;
+
+        return $this;
+    }
+    public function setEndTime(\DateTime $endtime): self
+    {
+        $this->endtime = $endtime;
+
+        return $this;
+    }
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
 
 }

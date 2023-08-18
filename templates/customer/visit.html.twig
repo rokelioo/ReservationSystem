@@ -1,0 +1,25 @@
+<form action="/customer/visit" method="post">
+    <label for="reservationCode">Enter your reservation code:</label>
+    <input type="text" id="reservationCode" name="reservationCode" required>
+    <button type="submit">Check</button>
+</form>
+
+{% if reservation is defined %}
+    <p>Your reservation is scheduled for {{ reservation.startTime|date('H:i') }}. The remaining time is {{ remainingTime }}.</p>
+    <form action="{{path('cancel_reservation', { 'id': reservation.pkId }) }}" method="post">
+        <button type="submit">Cancel Visit</button>
+    </form>
+{% elseif invalidCode is defined %}
+    <p>Invalid reservation code. Please try again.</p>
+{% endif %}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+{% endfor %}
+
+{% for message in app.flashes('error') %}
+    <div class="alert alert-danger">
+        {{ message }}
+    </div>
+{% endfor %}

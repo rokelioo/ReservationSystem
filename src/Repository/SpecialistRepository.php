@@ -27,4 +27,27 @@ class SpecialistRepository extends ServiceEntityRepository
 
         return $result;             
     }
+    public function findAllSpecialists()
+    {
+        $qb = $this->createQueryBuilder('s');
+
+        $result = $qb->select('s.pkId, s.name, s.surname')
+                     ->getQuery()
+                     ->getResult();
+
+        return $result;             
+    }
+    public function findSpecialist($specialistId)
+    {
+        $qb = $this->createQueryBuilder('s');
+
+        $result = $qb->select('s.pkId')
+                     ->where('s.pkId = :pkId')
+                     ->setParameter('pkId', $specialistId)
+                     ->getQuery()
+                     ->getOneOrNullResult();
+
+        return $result;    
+    }
+
 }

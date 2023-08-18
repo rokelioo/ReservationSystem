@@ -50,6 +50,10 @@ class Customer
      */
     private $reservationCode;
 
+    public function getpkId(): ?string
+    {
+        return $this->pkId;
+    }
     public function getName(): ?string
     {
         return $this->name;
@@ -62,4 +66,35 @@ class Customer
     {
         return $this->reservationCode;
     }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function setSurname(string $surname): self
+    {
+        $this->surname = $surname;
+
+        return $this;
+    }
+
+    public function setReservationCode(int $reservationCode): self
+    {
+        $this->reservationCode = $reservationCode;
+
+        return $this;
+    }
+
+    public function setFkSpecialist(int $fkSpecialist): self
+    {
+        $this->fkSpecialist = $fkSpecialist;
+
+        return $this;
+    }
+    
+
+    
 }
