@@ -1,3 +1,6 @@
+<head>
+    <link rel="stylesheet" href="{{ asset('css/reservation.css') }}">
+</head>
 <body>
     <div class="login-container">
         <form action="/customer/reservation" method="POST">
@@ -15,13 +18,14 @@
 
             <button type="submit">Make Reservation</button>
         </form>
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="flash-{{ label }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
     </div>
 </body>
-{% for label, messages in app.flashes %}
-    {% for message in messages %}
-        <div class="flash-{{ label }}">
-            {{ message }}
-        </div>
-    {% endfor %}
-{% endfor %}
+
 

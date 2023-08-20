@@ -50,7 +50,7 @@ class Customer
      */
     private $reservationCode;
 
-    public function getpkId(): ?string
+    public function getpkId(): ?int
     {
         return $this->pkId;
     }

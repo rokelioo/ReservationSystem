@@ -39,15 +39,7 @@ class SpecialistRepository extends ServiceEntityRepository
     }
     public function findSpecialist($specialistId)
     {
-        $qb = $this->createQueryBuilder('s');
-
-        $result = $qb->select('s.pkId')
-                     ->where('s.pkId = :pkId')
-                     ->setParameter('pkId', $specialistId)
-                     ->getQuery()
-                     ->getOneOrNullResult();
-
-        return $result;    
+        return $this->findOneBy(['pkId' => $specialistId]);    
     }
 
 }

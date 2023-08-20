@@ -1,7 +1,36 @@
-<div id="reservation-codes">
-    {% for code in reservationCodes %}
-        <div class="reservation-code">
-            {{ code }}
-        </div>
+<head>
+    <link rel="stylesheet" href="{{ asset('css/display.css') }}">
+    <script src="{{ asset('js/DisplayUpdate.js') }}"></script>
+</head>
+<body>
+
+<div id="reservation-codes" data-specialist-id="{{ specialist_id }}">
+
+    {% set currentVisitDisplayed = false %}
+    
+    {% for reservation in reservationCodes %}
+        
+        {# Display current visit if the status is "Begin" #}
+        {% if reservation.status == 'Begin' and not currentVisitDisplayed %}
+            <div class="reservation-code current-visit">
+                Current visit number: {{ reservation.code }}
+            </div>
+            {% set currentVisitDisplayed = true %}
+        
+        {# Display upcoming visit if there was a current visit #}
+        {% elseif currentVisitDisplayed and not upcomingVisitDisplayed is defined %}
+            <div class="reservation-code upcoming-visit">
+                Upcoming visit number: {{ reservation.code }}
+            </div>
+            {% set upcomingVisitDisplayed = true %}
+        
+        {# Display other reservations normally (you can adjust if needed) #}
+        {% else %}
+            <div class="reservation-code">
+                {{ reservation.code }}
+            </div>
+        {% endif %}
     {% endfor %}
 </div>
+
+</body>

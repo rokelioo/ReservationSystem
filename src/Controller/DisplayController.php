@@ -2,55 +2,60 @@
 
 namespace App\Controller;
 
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Repository\CustomerRepository;
 use App\Repository\ReservationRepository;
+use App\Service\ReservationService;
 
 class DisplayController extends AbstractController
 {
+
+    private $reservationService;
+
+    public function __construct(ReservationService $reservationService)
+    {
+        $this->reservationService = $reservationService;
+    }
+
     #[Route('/display/{id}', name: 'display_board')]
     public function showReservations($id, ReservationRepository $reservationRepository, CustomerRepository $customerRepository)
     {
-        // Fetch all of today's reservations for the given specialist id.
-        $startDate = new \DateTime('midnight');
-        $endDate = (clone $startDate)->modify('+1 day');
         
-        $query = $reservationRepository->createQueryBuilder('r')
-            ->where('r.fkSpecialist = :id')
-            ->andWhere('r.starttime BETWEEN :startDate AND :endDate')
-            ->andWhere('r.status != :cancelledStatus')
-            ->setParameter('id', $id)
-            ->setParameter('startDate', $startDate)
-            ->setParameter('endDate', $endDate)
-            ->setParameter('cancelledStatus', 'Cancel')
-            ->getQuery();
-
-        $reservations = $query->getResult();
-
-        // Sort reservations by priority status.
-        usort($reservations, function ($a, $b) {
-            if ($a->getStatus() === 'Priority') {
-                return -1;
-            } elseif ($b->getStatus() === 'Priority') {
-                return 1;
-            }
-            return 0;
-        });
-
-        // Fetch the reservation code for each reservation's associated customer.
-        $reservationCodes = [];
-        foreach ($reservations as $reservation) {
-            $customer = $customerRepository->find($reservation->getFkCustomer());
-            $reservationCodes[] = $customer->getReservationCode();
-        }
-
-        // Only take the next 7 reservations.
-        $nextReservations = array_slice($reservationCodes, 0, 7);
+        $reservations = $reservationRepository->findAllBySpecialist($id);
+        $sortedReservations = $this->reservationService->sortReservations($reservations);
+        $nextReservations = $this->getReservationDetails($sortedReservations, $customerRepository);
 
         return $this->render('display/board.html.twig', [
-            'reservationCodes' => $nextReservations
+            'reservationCodes' => $nextReservations,
+            'specialist_id' => $id
         ]);
     }
+
+    #[Route('/api/display/{id}', name: 'api_display_board')]
+    public function apiShowReservations($id, ReservationRepository $reservationRepository, CustomerRepository $customerRepository)
+    {
+         
+         $reservations = $reservationRepository->findAllBySpecialist($id);
+         $sortedReservations = $this->reservationService->sortReservations($reservations);
+         $nextReservations = $this->getReservationDetails($sortedReservations, $customerRepository);
+
+        return $this->json($nextReservations);
+    }
+
+
+    private function getReservationDetails(array $reservations, CustomerRepository $customerRepository): array
+    {
+        $reservationDetails = [];
+        foreach ($reservations as $reservation) {
+            $customer = $customerRepository->find($reservation->getFkCustomer());
+            $reservationDetails[] = [
+                'code' => $customer->getReservationCode(),
+                'status' => $reservation->getStatus()
+            ];
+        }
+
+        return array_slice($reservationDetails, 0, 7);
+    }
+
 }

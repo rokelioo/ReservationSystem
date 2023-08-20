@@ -43,6 +43,9 @@ class Specialist
      * @ORM\Column(name="password", type="string", length=25, nullable=false)
      */
     private $password;
-
+    public function getpkId(): int
+    {
+        return $this->pkId;
+    }
 
 }

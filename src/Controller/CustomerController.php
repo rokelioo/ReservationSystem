@@ -8,10 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\SpecialistRepository;
 use App\Repository\ReservationRepository;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use App\Service\ReservationService;
-use App\Entity\Customer;
-use App\Entity\Reservation;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -27,49 +24,21 @@ class CustomerController extends AbstractController
     }
 
     #[Route('/customer/reservation', name: 'customer_reservation')]
-    public function Reservation(Request $request, SpecialistRepository $specialistRepository, ReservationRepository $reservationRepository)
+    public function Reservation(Request $request, SpecialistRepository $specialistRepository,  ReservationService $reservationService)
     {
         if($request->isMethod('POST'))
         {
-            $name = $request->request->get('name');
-            $surname = $request->request->get('surname');
-            $specialistId = $request->request->get('specialistId');
-
-            $specialist = $specialistRepository->findSpecialist($specialistId);
-
-            if ($specialist) {
-                $nextSlotTimes = $this->reservationService->findNextReservationSlot($specialist, $reservationRepository);
-            
-                // Generate a reservation code. This can be more sophisticated.
-                $reservationCode = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT); // Just a simple example
-
-                $customer = new Customer();
-                $customer->setfkSpecialist($specialistId);
-                $customer->setName($name);
-                $customer->setSurname($surname);
-                $customer->setReservationCode($reservationCode);
-
-                $this->entityManager->persist($customer);
-                $this->entityManager->flush();
-                $customerId = $customer->getPkId();
-
-                $reservation = new Reservation();
-                $reservation->setfkSpecialist($specialistId);
-                $reservation->setfkCustomer($customerId);
-                $reservation->setStartTime($nextSlotTimes['start']);
-                $reservation->setEndTime($nextSlotTimes['end']);
-                $reservation->setStatus("pending");
-
-                $this->entityManager->persist($reservation);
-                $this->entityManager->flush();
-
-                $this->addFlash('success', 'Your reservation is confirmed from ' 
-                    . $nextSlotTimes['start']->format('H:i') 
-                    . ' to ' 
-                    . $nextSlotTimes['end']->format('H:i') 
-                    . '. Your code is ' . $reservationCode . '.');
-            } else {
-                $this->addFlash('error', 'Specialist not found.');
+            $data = [
+                'name' => $request->request->get('name'),
+                'surname' => $request->request->get('surname'),
+                'specialistId' => $request->request->get('specialistId')
+            ];
+    
+            try {
+                $reservationCode = $reservationService->createReservation($data);
+                $this->addFlash('success', 'Your reservation is confirmed. Your code is ' . $reservationCode . '.');
+            } catch (\Exception $e) {
+                $this->addFlash('error', $e->getMessage());
             }
         }
         $specialists = $specialistRepository->findAllSpecialists();
@@ -84,26 +53,21 @@ class CustomerController extends AbstractController
         {
             $code = $request->request->get('reservationCode');
             $customer = $customerRepository->findOneBy(['reservationCode' => $code]);
-            $reservation = null;
-            if ($customer) {
-                $reservation = $reservationRepository->findOneBy(['fkCustomer' => $customer->getPkId()]);
+            if (!$customer) {
+                return $this->renderWithError('Invalid Reservation Code.');
             }
 
-            if ($reservation) {
-                $now = new \DateTime('now');
-                $interval = $now->diff($reservation->getStartTime());
-                $remainingTime = $interval->format('%h hours %i minutes');
-
-                return $this->render('customer/visit.html.twig', [
-                    'reservation' => $reservation,
-                    'remainingTime' => $remainingTime
-                ]);
-            } 
-            else {
-                return $this->render('customer/visit.html.twig', [
-                    'invalidCode' => true
-                ]);
+            $reservation = $reservationRepository->findOneBy(['fkCustomer' => $customer->getPkId()]);
+            if (!$reservation) {
+                return $this->renderWithError('Reservation not found for given code.');
             }
+
+            $remainingTime = $this->reservationService->getRemainingTime($reservation->getStartTime());
+
+            return $this->render('customer/visit.html.twig', [
+                'reservation' => $reservation,
+                'remainingTime' => $remainingTime
+            ]);
         }
         return $this->render('customer/visit.html.twig');
         
@@ -117,11 +81,16 @@ class CustomerController extends AbstractController
             $this->entityManager->persist($reservation);
             $this->entityManager->flush();
 
-            $this->addFlash('success', 'Your reservation has been cancelled.');
+            $this->addFlash('canceled', 'Your reservation has been cancelled.');
         } else {
             $this->addFlash('error', 'Reservation not found.');
         }
 
         return $this->redirectToRoute('customer_visit'); 
     }
+    private function renderWithError($message) {
+        return $this->render('customer/visit.html.twig', [
+            'error' => $message
+        ]);
+    } 
 }

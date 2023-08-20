@@ -1,21 +1,43 @@
-{% for item in customerReservations %}
-    <div>
-        {{ item.customer.name }}
-        {{ item.customer.surname }}
-        {{ item.customer.reservationCode }}
+<head>
+    <link rel="stylesheet" href="{{ asset('css/main.css') }}">
+</head>
+<div class="logout-container">
+    <a href="{{ path('specialist_logout') }}" class="logout-button">Logout</a>
+</div>
+{% if reservationCustomers|length > 0 %}
+    {% set nextVisit = (ongoingReservation and ongoingReservation.reservation.status == 'Begin' and reservationCustomers[0].reservation.pkId == ongoingReservation.reservation.pkId) ? reservationCustomers[1] : reservationCustomers[0] %}
+    {% if nextVisit is defined %}
+        <div class="next-visit">
+            Next visit is: {{ nextVisit.customer.reservationCode }}
+        </div>
+    {% endif %}
+{% endif %}
+{% for item in reservationCustomers %}
+    <div class="reservation-card">
+        <div class="reservation-info">
+            <span>{{ item.customer.name }} {{ item.customer.surname }}</span>
+            <span>{{ item.customer.reservationCode }}</span>
+        </div>
 
         {% if item.reservation %}
-            <p>Reservation Time: {{ item.reservation.startTime|date('H:i') }}</p>
+            <p class="reservation-time">Reservation Time: {{ item.reservation.startTime|date('H:i') }}</p>
 
-            <form action="{{ path('update_reservation_status', {'id': item.reservation.pkId}) }}" method="post">
+            <form class="status-form" action="{{ path('update_reservation_status', {'id': item.reservation.pkId}) }}" method="post">
                 <select name="status">
-                    <option value="Cancel">Cancel</option>
-                    <option value="Begin">Begin</option>
-                    <option value="End">End</option>
-                    <option value="Priority">Priority</option>
+                    <option value="Pending" {% if item.reservation.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Begin" {% if item.reservation.status == 'Begin' %}selected{% endif %}>Begin</option>
+                    <option value="End" {% if item.reservation.status == 'End' %}selected{% endif %}>End</option>
+                    <option value="Priority" {% if item.reservation.status == 'Priority' %}selected{% endif %}>Priority</option>
                 </select>
                 <button type="submit">Update</button>
             </form>
         {% endif %}
     </div>
 {% endfor %}
+{% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="flash-{{ label }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}

@@ -14,14 +14,25 @@ class ReservationRepository extends ServiceEntityRepository
     }
     public function findAllBySpecialist($specialistId)
     {
-        $qb = $this->createQueryBuilder('r');
 
         // Start of today
         $startOfToday = new \DateTime("midnight");
+        
+        // End of today
+        $endOfToday = (clone $startOfToday)->modify('+1 day');
+        $qb = $this->createQueryBuilder('r');
+        $result = $qb->where('r.fkSpecialist = :specialistId')
+            ->andWhere('r.starttime >= :start')
+            ->andWhere('r.starttime < :end')
+            ->andWhere('r.status NOT IN(:excludedStatuses)')
+            ->setParameter('specialistId', $specialistId)
+            ->setParameter('start', $startOfToday)
+            ->setParameter('end', $endOfToday)
+            ->setParameter('excludedStatuses', ['Cancel', 'End'])
+            ->orderBy('r.starttime', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        $result = $qb->where('r.starttime >= :start')
-        ->setParameter('start', $startOfToday)
-        ->orderBy('r.startTime', 'ASC');
         return $result; 
     }
     public function findLastReservation($specialistId, \DateTime $today)
