@@ -55,7 +55,7 @@ class DisplayController extends AbstractController
             ];
         }
 
-        return array_slice($reservationDetails, 0, 7);
+        return array_slice($reservationDetails, 0, 8);
     }
 
 }
